@@ -33,6 +33,7 @@ def kd(x):
     z=auv.get_depth()-x
     z_drave((abs(z/3)**(1/3))*16*zch(z)*3)
 
+# Функция для поиска линии в поле зрения камеры
 def  Find_odject(image, name):
     img = cv2.cvtColor(image, cv2.COLOR_BGR2HSV) 
 
@@ -48,7 +49,6 @@ def  Find_odject(image, name):
         x = moments["m10"] / moments["m00"]
         y = moments['m01'] / moments['m00']
 
-
         cv2. circle(image, (int(x), int(y)), 5, (0, 255, 0))
 
         cv2.imshow(name, image)
@@ -60,48 +60,49 @@ def  Find_odject(image, name):
     except IndexError:
         return None
 
-def search_2_line(cor2):
+# Функция выравнивания робота по центру относительно 2/3 изображения
+def search_2_line(cor2, k=0.2):
     if cor2: 
         x, y = cor2
         controlX = 2 * (x - width / 2) / width
-        controlY = 2 * (y - height / 2) / height
 
-        if abs(controlX) < 0.2:
+        if abs(controlX) < k:
             y_drave(15)
 
-        elif controlX > 0.2:
+        elif controlX > k:
             auv.set_motor_power(1,-speed)
             auv.set_motor_power(0,speed)
             
-        elif controlX < -0.2:
+        elif controlX < -k:
             auv.set_motor_power(1,speed)
             auv.set_motor_power(0,-speed)
         else:
             y_drave(0)
 
-def search_1_line(cor1, cor2):
+# Функция выравнивания робота по центру относительно 1/3 изображения
+def search_1_line(cor1, cor2, k=0.2):
     if cor1: 
         x, y = cor1
         controlX = 2 * (x - width / 2) / width
-        controlY = 2 * (y - height / 2) / height
 
-        if abs(controlX) < 0.2:
+        if abs(controlX) < k:
             search_2_line(cor2)
 
-        elif controlX > 0.2:
+        elif controlX > k:
             auv.set_motor_power(1,-speed)
             auv.set_motor_power(0, speed)
             
-        elif controlX < -0.2:
+        elif controlX < -k:
             auv.set_motor_power(1,speed)
             auv.set_motor_power(0,-speed)
         else:
             y_drave(0)
 
-def dive():
+# Функция удержания заданной высоты 
+def dive(z=5):
     global counter
     if counter == 0:
-        kd(5)
+        kd(z)
         counter = 10
     counter -= 1
 
@@ -116,7 +117,7 @@ while True:
     img1 = image[0:height//3, 0:width]
     img2 = image[height//3:height//3*2, 0:width]
 
-    cor1 = Find_odject(img1, '123')
-    cor2 = Find_odject(img2, '234')
+    cor1 = Find_odject(img1, 'CCV1')
+    cor2 = Find_odject(img2, 'CCV2')
 
     search_1_line(cor1, cor2)
